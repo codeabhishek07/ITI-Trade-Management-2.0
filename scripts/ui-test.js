@@ -112,9 +112,9 @@ async function rawAPI(pathname, method = 'GET', body) {
     await sleep(500);
     const chk = await rawAPI('/api/admin/settings');
     chk.data.working_days_per_month === '25' ? pass('settings save → DB (working_days=25)') : fail('settings did not persist: ' + chk.data.working_days_per_month);
-    wdInput.value = '26';
-    btnByText('Save Settings').click();
-    await sleep(400);
+    await rawAPI('/api/admin/settings', 'PUT', { working_days_per_month: '26' });
+    const back = await rawAPI('/api/admin/settings');
+    back.data.working_days_per_month === '26' ? pass('settings restored to 26') : fail('restore failed');
   }
   // validation: bad radius rejected
   const radius = $$('input').find(i => i.dataset.name === 'campus_radius_m');
