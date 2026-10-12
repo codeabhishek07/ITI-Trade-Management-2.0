@@ -1,16 +1,21 @@
 {
-  "name": "aabe638ca8dd669110ace4ea",
+  "name": "iti-trade-management",
   "version": "1.0.0",
-  "description": "",
+  "description": "ITI Trade Management \u2014 Government ITI Raigarh, Chhattisgarh",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js",
+    "seed": "node scripts/seed-demo.js",
+    "test": "node scripts/smoke-test.js && node scripts/ui-test.js"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "type": "commonjs",
   "dependencies": {
     "express": "^4.22.3"
+  },
+  "devDependencies": {
+    "jsdom": "^30.1.2"
   }
 }
