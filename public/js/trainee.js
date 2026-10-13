@@ -1,6 +1,70 @@
 'use strict';
 /* Trainee pages: dashboard with GPS attendance, leave, history, warnings */
 
+/* ---------- Attendance calendar (dashboard) ---------- */
+function attendanceCalendar() {
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  let y = now.getFullYear(), m = now.getMonth();
+  const title = el('strong', { style: 'font-size:16px' });
+  const pills = el('div', { style: 'display:flex;gap:8px;flex-wrap:wrap' });
+  const grid = el('div', { class: 'cal-grid' });
+  const load = async () => {
+    title.textContent = new Date(y, m, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+    grid.innerHTML = '';
+    for (const d of ['S', 'M', 'T', 'W', 'T', 'F', 'S']) grid.append(el('div', { class: 'cal-dow' }, d));
+    let rows = [], stats = { pct: 0 };
+    try { ({ rows, stats } = await api('/api/trainee/attendance?month=' + `${y}-${pad(m + 1)}`)); }
+    catch (e) { toast(e.message, 'error'); }
+    const byDate = {};
+    for (const r of rows) byDate[r.date] = r;
+    const firstDow = new Date(y, m, 1).getDay();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    for (let i = 0; i < firstDow; i++) grid.append(el('div', { class: 'cal-cell empty' }));
+    const count = st => rows.filter(r => r.status === st).length;
+    for (let dnum = 1; dnum <= daysInMonth; dnum++) {
+      const ds = `${y}-${pad(m + 1)}-${pad(dnum)}`;
+      const rec = byDate[ds];
+      const st = rec ? rec.status : (ds > today ? 'future' : 'none');
+      grid.append(el('div', {
+        class: `cal-cell ${st}${ds === today ? ' today' : ''}`,
+        title: rec
+          ? `${ds} — ${statusLabel(rec.status)}${rec.marked_at ? ' at ' + String(rec.marked_at).slice(11, 16) : ''}`
+          : `${ds} — ${st === 'future' ? 'Upcoming' : 'No record'}`
+      }, el('span', {}, String(dnum)), el('span', { class: `cal-dot${rec ? '' : ' dim'}` })));
+    }
+    pills.innerHTML = '';
+    pills.append(
+      el('span', { class: 'window-pill' }, `Month: ${stats.pct}%`),
+      el('span', { class: 'window-pill' }, `Present: ${count('present')}`),
+      el('span', { class: 'window-pill' }, `Absent: ${count('absent')}`),
+      el('span', { class: 'window-pill' }, `Leaves: ${count('cl') + count('ml') + count('half_day')}`));
+  };
+  const step = n => { m += n; if (m < 0) { m = 11; y--; } if (m > 11) { m = 0; y++; } load(); };
+  const card = el('div', { class: 'card' },
+    el('div', { class: 'cal-head' },
+      el('h3', { style: 'margin:0' }, '📅 Attendance Calendar'),
+      title,
+      el('div', { style: 'flex:1' }),
+      pills,
+      el('div', { class: 'cal-nav' },
+        el('button', { class: 'btn btn-outline btn-sm', onclick: () => step(-1), 'aria-label': 'Previous month' }, '‹'),
+        el('button', { class: 'btn btn-outline btn-sm', onclick: () => { y = now.getFullYear(); m = now.getMonth(); load(); } }, 'Today'),
+        el('button', { class: 'btn btn-outline btn-sm', onclick: () => step(1), 'aria-label': 'Next month' }, '›'))),
+    grid,
+    el('div', { class: 'legend', style: 'margin-top:10px' },
+      el('span', {}, el('i', { style: 'background:#16a34a' }), 'Present'),
+      el('span', {}, el('i', { style: 'background:#dc2626' }), 'Absent'),
+      el('span', {}, el('i', { style: 'background:#2563eb' }), 'Casual / Medical Leave'),
+      el('span', {}, el('i', { style: 'background:#f59e0b' }), 'Half Day'),
+      el('span', {}, el('i', { style: 'background:#e2e8f0' }), 'No record'),
+      el('span', {}, el('i', { style: 'background:transparent;border:2px dashed #94a3b8' }), 'Upcoming')),
+    el('div', { class: 'notice info mt' }, 'Each box is one day — hover a day to see its details. Green = present, red = absent, blue = approved leave, amber = half day.'));
+  load();
+  return card;
+}
+
 registerRoutes('trainee', [
   {
     path: '#/dashboard', label: 'My Dashboard', icon: '🏠', render: async () => {
@@ -81,9 +145,6 @@ registerRoutes('trainee', [
       if (dash.already_marked) { markBtn.disabled = true; markBtn.textContent = '✅ Already Marked'; gpsDot.className = 'gps-dot ok'; gpsText.textContent = 'Attendance recorded for today.'; }
       else if (!dash.can_mark) { markBtn.disabled = true; gpsText.textContent = `Attendance window (${dash.window.start}–${dash.window.end}) is currently closed.`; }
 
-      /* ---- Charts ---- */
-      const dayCanvas = el('canvas', { class: 'chart' });
-      const monthCanvas = el('canvas', { class: 'chart' });
 
       /* ---- Balances ---- */
       const bal = dash.leave_balances;
@@ -99,16 +160,7 @@ registerRoutes('trainee', [
           statCard('Warnings Received', dash.warnings, dash.warnings ? { color: 'red', icon: '⚠️' } : { icon: '⚠️' }),
           statCard('Trade', me.profile.trade ? me.profile.trade.name : '—', { color: 'violet', icon: '🛠️' })
         ),
-        el('div', { class: 'grid-2' },
-          el('div', { class: 'chart-box' },
-            el('h4', {}, 'Last 14 Days'),
-            dayCanvas, CHART_LEGEND.cloneNode(true)),
-          el('div', { class: 'chart-box' },
-            el('h4', {}, 'Monthly Attendance % (last 6 months)'),
-            monthCanvas,
-            el('div', { class: 'legend' }, el('span', {}, el('i', { style: 'background:#2563eb' }), 'Monthly %'),
-              el('span', {}, el('i', { style: 'background:#dc2626' }), '80% requirement')))
-        ),
+        attendanceCalendar(),
         el('div', { class: 'card' },
           el('h3', {}, 'Leave Balance'),
           el('dl', { class: 'kv' },
@@ -122,11 +174,6 @@ registerRoutes('trainee', [
         )
       );
 
-      setTimeout(() => {
-        drawStackedDayChart(dayCanvas, dash.chart);
-        drawBarChart(monthCanvas, dash.months.map(m => m.month.slice(2)), dash.months.map(m => m.pct),
-          { color: '#2563eb', max: 100, suffix: '%', targetLine: 80 });
-      }, 40);
       return wrap;
     }
   },

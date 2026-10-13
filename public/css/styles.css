@@ -273,3 +273,32 @@ canvas.chart { width: 100%; height: 190px; display: block; }
   .sidebar, .topbar, .toolbar, .btn { display: none !important; }
   .content { padding: 0; }
 }
+
+/* ---------- Attendance calendar ---------- */
+.cal-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.cal-nav { display: flex; gap: 6px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.cal-dow { text-align: center; font-size: 12px; font-weight: 700; color: var(--muted); padding: 2px 0; }
+.cal-cell {
+  min-height: 46px; border: 1px solid var(--line); border-radius: 10px; background: #fff;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  font-size: 13px; font-weight: 600; color: #334155;
+}
+.cal-cell.empty { border: none; background: transparent; }
+.cal-cell .cal-dot { width: 8px; height: 8px; border-radius: 50%; background: #cbd5e1; }
+.cal-cell .cal-dot.dim { background: #eef2f6; }
+.cal-cell.present { background: var(--green-soft); border-color: #bbf7d0; color: #15803d; }
+.cal-cell.present .cal-dot { background: #16a34a; }
+.cal-cell.absent { background: var(--red-soft); border-color: #fecaca; color: #b91c1c; }
+.cal-cell.absent .cal-dot { background: #dc2626; }
+.cal-cell.cl, .cal-cell.ml { background: var(--primary-soft); border-color: var(--primary-border); color: #1d4ed8; }
+.cal-cell.cl .cal-dot, .cal-cell.ml .cal-dot { background: #2563eb; }
+.cal-cell.half_day { background: var(--amber-soft); border-color: #fde68a; color: #b45309; }
+.cal-cell.half_day .cal-dot { background: #f59e0b; }
+.cal-cell.future { opacity: .4; }
+.cal-cell.today { outline: 2px solid var(--primary); outline-offset: 1px; }
+@media (max-width: 560px) {
+  .cal-cell { min-height: 38px; font-size: 12px; border-radius: 8px; }
+  .cal-dow { font-size: 11px; }
+  .cal-head h3 { font-size: 15px; }
+}
