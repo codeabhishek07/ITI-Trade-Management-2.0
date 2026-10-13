@@ -87,7 +87,7 @@ router.post('/trainees', (req, res) => {
   let r;
   try {
     r = db.prepare(`INSERT INTO users (role, name, username, password, email, mobile, trade_id, session_id, roll_no, gender, guardian, is_active)
-      VALUES ('trainee',?,?,?,?,?,?,?,?,?,?,?,?)`)
+      VALUES ('trainee',?,?,?,?,?,?,?,?,?,?,?)`)
       .run(String(b.name).trim(), String(b.username).trim(), `${salt}:${hash}`,
         b.email ? String(b.email).trim() : null, b.mobile ? String(b.mobile).trim() : null,
         Number(b.trade_id), b.session_id ? Number(b.session_id) : (sess ? sess.id : null),
