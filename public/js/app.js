@@ -16,6 +16,19 @@ $('#role-tabs').addEventListener('click', e => {
   $('#login-title').textContent = ROLE_TITLES[loginRole];
 });
 
+/* Show/hide password eye on the login window */
+$('#toggle-pw').addEventListener('click', () => {
+  const inp = $('#login-password');
+  const btn = $('#toggle-pw');
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  btn.classList.toggle('showing', show);
+  btn.setAttribute('aria-pressed', String(show));
+  btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+  btn.title = show ? 'Hide password' : 'Show password';
+  inp.focus();
+});
+
 $('#login-form').addEventListener('submit', async e => {
   e.preventDefault();
   const errBox = $('#login-error');
