@@ -44,7 +44,8 @@ app.use('/api/reports', requireLogin, requireRole('admin', 'officer'), reportRou
 
 // ---- Static + SPA fallback ------------------------------------------------
 const PUBLIC = path.join(__dirname, 'public');
-app.use(express.static(PUBLIC, { index: 'index.html', maxAge: '1h' }));
+app.use(express.static(PUBLIC, { index: 'index.html', maxAge: '1h',
+  setHeaders: (res, filePath) => { if (/\.(js|css|html)$/.test(filePath)) res.setHeader('Cache-Control', 'no-cache'); } }));
 app.get(/^(?!\/api\/).*/, (req, res) => res.sendFile(path.join(PUBLIC, 'index.html')));
 
 // ---- Errors ---------------------------------------------------------------

@@ -62,7 +62,9 @@ function modal({ title, body, footer, wide, onClose }) {
     el('div', { class: 'modal-body' }, body),
     footer ? el('div', { class: 'modal-foot' }, footer) : null
   );
-  const backdrop = el('div', { class: 'modal-backdrop', onclick: e => { if (e.target === backdrop) close(); } }, box);
+  // Backdrop clicks intentionally do NOT close the modal — unsaved form data must not vanish.
+  // Close only via the × button, Cancel, or Esc.
+  const backdrop = el('div', { class: 'modal-backdrop' }, box);
   root.innerHTML = ''; root.append(backdrop);
   document.addEventListener('keydown', onKey);
   return { close, box };
