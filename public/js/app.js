@@ -61,12 +61,25 @@ function showLogin() {
   $('#login-screen').classList.remove('hidden');
 }
 
+function roleBadgeText(user) {
+  if (user.role === 'trainee') {
+    const t = user.trade_name || 'Trainee';
+    return user.roll_no ? `${t} · Roll ${user.roll_no}` : t;
+  }
+  if (user.role === 'officer') {
+    const trades = user.trade_names || [];
+    return trades.length ? `${ROLE_LABELS.officer} · ${trades.join(', ')}` : ROLE_LABELS.officer;
+  }
+  return ROLE_LABELS[user.role];
+}
+
 function showApp(user) {
   App.user = user;
   $('#login-screen').classList.add('hidden');
   $('#app').classList.remove('hidden');
   $('#user-name').textContent = user.name;
-  $('#user-role-badge').textContent = ROLE_LABELS[user.role];
+  $('#user-role-badge').textContent = roleBadgeText(user);
+  $('#user-role-badge').title = roleBadgeText(user);
   buildSidebar();
   const target = location.hash && location.hash !== '#' ? location.hash : ROLE_HOME[user.role];
   if (!currentRoute()) location.hash = ROLE_HOME[user.role];

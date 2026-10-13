@@ -21,7 +21,12 @@ app.post('/api/logout', logout);
 app.get('/api/me', (req, res) => {
   const u = getUser(req);
   if (!u) return res.status(401).json({ error: 'Authentication required.' });
-  res.json({ user: { id: u.id, role: u.role, name: u.name, username: u.username, email: u.email, mobile: u.mobile, must_change_password: u.must_change_password, trade_ids: u.trade_ids } });
+  let trade_names = [];
+  if (u.role === 'officer' || u.role === 'trainee') {
+    const ids = u.trade_ids || [];
+    if (ids.length) trade_names = db.prepare(`SELECT name FROM trades WHERE id IN (${ids.map(() => '?').join(',')})`).all(...ids).map(r => r.name);
+  }
+  res.json({ user: { id: u.id, role: u.role, name: u.name, username: u.username, email: u.email, mobile: u.mobile, must_change_password: u.must_change_password, trade_ids: u.trade_ids, trade_name: trade_names[0] || null, trade_names, roll_no: u.roll_no || null } });
 });
 app.post('/api/change-password', requireLogin, changePassword);
 
