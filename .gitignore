@@ -1,4 +1,14 @@
+# Dependencies
 node_modules/
-data/*.db
-data/*.db-*
+
+# Logs
 *.log
+npm-debug.log*
+
+# SQLite runtime temp files (recreated automatically while the server runs)
+data/*.db-shm
+data/*.db-wal
+
+# OS noise
+.DS_Store
+Thumbs.db
